@@ -1,0 +1,22 @@
+Windows Registry Editor Version 5.00
+
+; Right-click on a folder icon
+[HKEY_CLASSES_ROOT\Directory\shell\Backup]
+@="Backup with pybackup"
+
+[HKEY_CLASSES_ROOT\Directory\shell\Backup\command]
+@="cmd.exe /c pybackup -i \"%V\" -d \"myremote:Backup\""
+
+; Right-click on the background inside an open folder window
+[HKEY_CLASSES_ROOT\Directory\Background\shell\Backup]
+@="Backup with pybackup"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\Backup\command]
+@="cmd.exe /c pybackup -i \"%V\" -d \"myremote:Backup\""
+
+; Right-click on any file
+[HKEY_CLASSES_ROOT\*\shell\Backup]
+@="Backup with pybackup"
+
+[HKEY_CLASSES_ROOT\*\shell\Backup\command]
+@="cmd.exe /c pybackup -i \"%1\" -d \"myremote:Backup\""
