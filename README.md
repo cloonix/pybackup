@@ -14,7 +14,7 @@ Requires [uv](https://docs.astral.sh/uv/) and [7-Zip](https://www.7-zip.org/).
 
 **From git:**
 ```sh
-uv tool install "https://github.com/cloonix/pybackup"
+uv tool install "git+https://github.com/cloonix/pybackup"
 ```
 
 **From a local checkout:**
