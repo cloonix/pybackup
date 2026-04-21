@@ -6,16 +6,17 @@ from .base import StorageBackend
 
 @dataclass
 class S3Backend(StorageBackend):
-    endpoint_url: str       # e.g. "https://minio.example.com"
+    endpoint_url: str | None  # e.g. "https://minio.example.com"; None = AWS S3
     access_key: str
     secret_key: str
     bucket: str
-    prefix: str = ""        # optional key prefix / "folder" inside the bucket
+    prefix: str = ""          # optional key prefix / "folder" inside the bucket
     region: str = "us-east-1"
 
     def name(self) -> str:
+        base = self.endpoint_url or "https://s3.amazonaws.com"
         prefix_part = f"/{self.prefix.strip('/')}" if self.prefix else ""
-        return f"s3 → {self.endpoint_url}/{self.bucket}{prefix_part}"
+        return f"s3 → {base}/{self.bucket}{prefix_part}"
 
     def _key(self, filename: str) -> str:
         if self.prefix:
@@ -32,13 +33,14 @@ class S3Backend(StorageBackend):
                 "Install it with: pip install pybackup[s3]"
             )
 
-        client = boto3.client(
-            "s3",
-            endpoint_url=self.endpoint_url,
+        kwargs = dict(
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key,
             region_name=self.region,
         )
+        if self.endpoint_url:
+            kwargs["endpoint_url"] = self.endpoint_url
+        client = boto3.client("s3", **kwargs)
 
         try:
             for f in (archive_path, checksum_path):

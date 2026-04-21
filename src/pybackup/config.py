@@ -58,7 +58,7 @@ def backend_for(dest: dict) -> StorageBackend:
     elif backend_type == "s3":
         from .backends.s3 import S3Backend
         return S3Backend(
-            endpoint_url=dest["endpoint_url"],
+            endpoint_url=dest.get("endpoint_url"),
             access_key=dest["access_key"],
             secret_key=dest["secret_key"],
             bucket=dest["bucket"],
