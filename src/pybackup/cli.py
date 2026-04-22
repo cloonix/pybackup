@@ -12,12 +12,13 @@ from .config import backend_for, load_config, resolve_destination
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Backup a file or folder to a destination")
-    parser.add_argument("-i", "--input", required=True, help="File or folder to archive")
+    parser.add_argument("-i", "--input", required=False, help="File or folder to archive")
     parser.add_argument("-o", "--output", required=False, help="Output filename without extension")
     parser.add_argument("-d", "--destination", required=False, help="Destination name from config, or an ad-hoc rclone remote")
     parser.add_argument("-e", "--encrypt", action="store_true", help="Encrypt the archive (GPG if available, else passphrase)")
     parser.add_argument("-p", "--passphrase", required=False, help="Force passphrase encryption, skipping GPG")
     parser.add_argument("--gpg-key", required=False, metavar="KEY_ID", help="Override GPG key ID (falls back to config)")
+    parser.add_argument("-l", "--list-destinations", action="store_true", help="List configured destinations and exit")
     return parser.parse_args()
 
 
@@ -49,7 +50,6 @@ def _default_config_path() -> Path:
 
 def backup_entry_point() -> None:
     args = _parse_args()
-    output_path = _build_output_path(args)
 
     config_path = _default_config_path()
     if not config_path.exists():
@@ -58,6 +58,17 @@ def backup_entry_point() -> None:
             "Create it with your destinations — see README.md for examples."
         )
     destinations, default, config_gpg_key = load_config(config_path)
+
+    if args.list_destinations:
+        for d in destinations:
+            marker = " (default)" if d["name"] == default else ""
+            print(f"{d['name']}{marker}")
+        return
+
+    if not args.input:
+        raise SystemExit("error: argument -i/--input is required")
+
+    output_path = _build_output_path(args)
     dest = resolve_destination(destinations, default, args.destination)
     backend = backend_for(dest)
 

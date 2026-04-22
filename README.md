@@ -93,6 +93,7 @@ Config file location:
 ## Usage
 
 ```sh
+pybackup -l                                       # list configured destinations
 pybackup -i /path/to/folder                      # upload to default destination
 pybackup -i /path/to/folder -d nas               # named destination from config
 pybackup -i /path/to/folder -d storagebox:Backup # ad-hoc rclone remote
@@ -105,7 +106,8 @@ pybackup -i /path/to/folder --gpg-key KEYID      # override GPG key
 
 | Flag | Description |
 |------|-------------|
-| `-i` / `--input` | File or folder to archive (required) |
+| `-l` / `--list-destinations` | Print configured destinations and exit |
+| `-i` / `--input` | File or folder to archive (required for backup) |
 | `-o` / `--output` | Output filename without extension (default: input name) |
 | `-d` / `--destination` | Named destination, ad-hoc rclone remote (`remote:path`), or local path |
 | `-e` / `--encrypt` | Encrypt — uses GPG if available/configured, else prompts for passphrase |
