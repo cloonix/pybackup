@@ -1,8 +1,19 @@
 import json
+import logging
 import os
 from pathlib import Path
 
 from .backends.base import StorageBackend
+from .exceptions import ConfigError
+
+logger = logging.getLogger(__name__)
+
+_REQUIRED_FIELDS: dict[str, list[str]] = {
+    "rclone": ["rclone_remote"],
+    "s3":     ["access_key", "secret_key", "bucket"],
+    "ssh":    ["host", "remote_path", "user"],
+    "local":  ["path"],
+}
 
 
 def _normalise(dest: str | dict) -> dict:
@@ -13,13 +24,34 @@ def _normalise(dest: str | dict) -> dict:
     return dest
 
 
+def _validate_destination(dest: dict) -> None:
+    backend_type = dest.get("backend", "rclone")
+    required = _REQUIRED_FIELDS.get(backend_type)
+    if required is None:
+        raise ConfigError(f"Unknown backend type: {backend_type!r}")
+    missing = [f for f in required if not dest.get(f)]
+    if missing:
+        name = dest.get("name", "<unnamed>")
+        raise ConfigError(
+            f"Destination {name!r} (backend={backend_type!r}) "
+            f"is missing required fields: {missing}"
+        )
+
+
 def _find_destination(destinations: list[dict], name: str) -> dict | None:
     return next((d for d in destinations if d["name"] == name), None)
 
 
 def load_config(config_path: Path) -> tuple[list[dict], str | None, str | None]:
-    data = json.loads(config_path.read_text())
-    destinations = [_normalise(d) for d in data.get("destinations", [])]
+    try:
+        data = json.loads(config_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"Invalid JSON in config file: {exc}") from exc
+    destinations = []
+    for raw in data.get("destinations", []):
+        d = _normalise(raw)
+        _validate_destination(d)
+        destinations.append(d)
     default = data.get("default")
     gpg_key = data.get("gpg_key")
     return destinations, default, gpg_key
@@ -34,19 +66,19 @@ def resolve_destination(
     if default:
         match = _find_destination(destinations, default)
         if match:
-            print(f"Using default destination: {default}")
+            logger.info("Using default destination: %s", default)
             return match
         return _normalise(default)
 
     if not destinations:
-        raise ValueError("No destinations found in config.json")
+        raise ConfigError("No destinations found in config.json")
 
     print("Available destinations:")
     for i, d in enumerate(destinations, 1):
         print(f"  {i}: {d['name']}")
     choice = int(input("Select a destination by number: "))
     if choice < 1 or choice > len(destinations):
-        raise ValueError("Invalid choice")
+        raise ConfigError("Invalid choice")
     return destinations[choice - 1]
 
 
@@ -77,4 +109,4 @@ def backend_for(dest: dict) -> StorageBackend:
     elif backend_type == "local":
         from .backends.local import LocalBackend
         return LocalBackend(path=Path(os.path.expandvars(dest["path"])).expanduser())
-    raise ValueError(f"Unknown backend type: {backend_type!r}")
+    raise ConfigError(f"Unknown backend type: {backend_type!r}")

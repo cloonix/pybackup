@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from .base import StorageBackend
-from .rclone import _run
+from .base import StorageBackend, _run
 
 
 @dataclass

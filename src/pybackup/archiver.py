@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import shutil
 import subprocess
@@ -7,18 +8,20 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from .exceptions import ArchiveError
+
+logger = logging.getLogger(__name__)
+
 
 def _run(cmd: list[str], label: str, cwd: str | None = None, ok_codes: tuple[int, ...] = (0,)) -> None:
     try:
         result = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
     except FileNotFoundError:
-        raise RuntimeError(
-            f"{cmd[0]!r} not found. Install it and ensure it is in PATH."
-        )
+        raise ArchiveError(f"{cmd[0]!r} not found. Install it and ensure it is in PATH.")
     if result.returncode not in ok_codes:
-        raise RuntimeError(f"{label} failed:\n{result.stderr.strip()}")
+        raise ArchiveError(f"{label} failed:\n{result.stderr.strip()}")
     if result.returncode != 0 and result.stderr.strip():
-        print(f"Warning: {result.stderr.strip()}")
+        logger.warning("%s", result.stderr.strip())
 
 
 def _find_7zip_binary() -> str | None:
@@ -57,9 +60,7 @@ class Archiver:
     def create(cls) -> "Archiver":
         path = _find_7zip_binary()
         if not path:
-            raise RuntimeError(
-                "7zip binary not found. Install 7-Zip and ensure it is in PATH."
-            )
+            raise ArchiveError("7zip binary not found. Install 7-Zip and ensure it is in PATH.")
         return cls(binary=path)
 
     def create_archive(
@@ -69,13 +70,15 @@ class Archiver:
         encryption_key: str | None = None,
     ) -> Path:
         temp_output = Path(tempfile.gettempdir()) / output.name
-
-        cmd = [self.binary, "a", str(temp_output), source.name, "-spf"]
-        if encryption_key:
-            cmd += [f"-p{encryption_key}", "-mhe=on"]
-
-        _run(cmd, "7zip", cwd=str(source.parent), ok_codes=(0, 1))
-        shutil.move(str(temp_output), str(output))
+        try:
+            cmd = [self.binary, "a", str(temp_output), source.name, "-spf"]
+            if encryption_key:
+                cmd += [f"-p{encryption_key}", "-mhe=on"]
+            _run(cmd, "7zip", cwd=str(source.parent), ok_codes=(0, 1))
+            shutil.move(str(temp_output), str(output))
+        except Exception:
+            temp_output.unlink(missing_ok=True)
+            raise
         return output
 
     def encrypt_gpg(self, archive: Path, key_id: str) -> Path:

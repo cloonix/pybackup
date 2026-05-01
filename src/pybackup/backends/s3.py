@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .base import StorageBackend
+from ..exceptions import BackendError
 
 
 @dataclass
@@ -28,7 +29,7 @@ class S3Backend(StorageBackend):
             import boto3
             from botocore.exceptions import BotoCoreError, ClientError
         except ImportError:
-            raise RuntimeError(
+            raise BackendError(
                 "boto3 is required for the S3 backend. "
                 "Install it with: uv add boto3"
             )
@@ -46,4 +47,4 @@ class S3Backend(StorageBackend):
             for f in (archive_path, checksum_path):
                 client.upload_file(str(f), self.bucket, self._key(f.name))
         except (BotoCoreError, ClientError) as exc:
-            raise RuntimeError(f"S3 upload failed: {exc}") from exc
+            raise BackendError(f"S3 upload failed: {exc}") from exc

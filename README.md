@@ -16,6 +16,9 @@ curl -fsSL https://raw.githubusercontent.com/cloonix/pybackup/main/install.sh | 
 
 # or manually
 uv tool install "git+https://github.com/cloonix/pybackup"
+
+# with S3/MinIO support
+uv tool install "git+https://github.com/cloonix/pybackup[s3]"
 ```
 
 **Upgrade:**
@@ -105,6 +108,8 @@ pybackup -i /path/to/folder -o archive_name      # custom archive name
 pybackup -i /path/to/folder -e                   # encrypt (GPG if configured, else passphrase)
 pybackup -i /path/to/folder -p mysecret          # force passphrase encryption
 pybackup -i /path/to/folder --gpg-key KEYID      # override GPG key
+pybackup -i /path/to/folder --dry-run            # preview without creating or uploading
+pybackup -i /path/to/folder -v                   # verbose / debug output
 ```
 
 If no `-d` flag is provided and no `default` is set in config, pybackup prompts to select from available destinations.
@@ -118,6 +123,8 @@ If no `-d` flag is provided and no `default` is set in config, pybackup prompts 
 | `-e` / `--encrypt` | Encrypt — uses GPG if available/configured, else prompts for passphrase |
 | `-p` / `--passphrase` | Force 7-Zip passphrase encryption, skipping GPG |
 | `--gpg-key KEY_ID` | Override the GPG key from config |
+| `--dry-run` | Show what would be archived and where without writing anything |
+| `-v` / `--verbose` | Enable debug-level logging |
 
 Each run uploads `<name>_<YYYYMMDD_HHMMSS>.7z` (or `.7z.gpg`) and a `.sha256` checksum, then deletes both local copies on success.
 

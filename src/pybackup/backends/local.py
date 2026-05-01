@@ -15,4 +15,4 @@ class LocalBackend(StorageBackend):
     def _upload(self, archive_path: Path, checksum_path: Path) -> None:
         self.path.mkdir(parents=True, exist_ok=True)
         for f in (archive_path, checksum_path):
-            shutil.move(str(f), self.path / f.name)
+            shutil.move(f, self.path / f.name)
