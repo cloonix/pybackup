@@ -6,6 +6,7 @@ Archive a file or folder with 7-Zip and upload it to a remote destination.
 
 - [uv](https://docs.astral.sh/uv/)
 - [7-Zip](https://www.7-zip.org/) — `apt install p7zip-full` / `brew install 7zip` / `choco install 7zip`
+- [boto3](https://pypi.org/project/boto3/) — installed automatically via `uv`
 
 ## Install
 
@@ -21,6 +22,8 @@ uv tool install "git+https://github.com/cloonix/pybackup"
 ```sh
 uv tool upgrade pybackup
 ```
+
+The install script creates a starter `config.json` with a local destination at `~/backups/pybackup` (or `%APPDATA%\pybackup\config.json` on Windows).
 
 ## Configure
 
@@ -104,6 +107,8 @@ pybackup -i /path/to/folder -p mysecret          # force passphrase encryption
 pybackup -i /path/to/folder --gpg-key KEYID      # override GPG key
 ```
 
+If no `-d` flag is provided and no `default` is set in config, pybackup prompts to select from available destinations.
+
 | Flag | Description |
 |------|-------------|
 | `-l` / `--list-destinations` | Print configured destinations and exit |
@@ -121,6 +126,8 @@ Each run uploads `<name>_<YYYYMMDD_HHMMSS>.7z` (or `.7z.gpg`) and a `.sha256` ch
 If `gpg_key` is set in config, GPG encryption runs automatically. Without it, `-e` prompts for a passphrase, or `-p` sets one directly.
 
 **Windows:** Install [Gpg4win](https://www.gpg4win.org/) to get `gpg` in PATH.
+
+For Windows Explorer context menu integration, double-click `windows_context_menu.reg` (included in the repository).
 
 ## Decrypt
 

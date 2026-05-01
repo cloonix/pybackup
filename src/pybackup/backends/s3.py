@@ -30,7 +30,7 @@ class S3Backend(StorageBackend):
         except ImportError:
             raise RuntimeError(
                 "boto3 is required for the S3 backend. "
-                "Install it with: pip install pybackup[s3]"
+                "Install it with: uv add boto3"
             )
 
         kwargs = dict(
