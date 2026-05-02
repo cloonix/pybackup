@@ -6,7 +6,7 @@ Archive a file or folder with 7-Zip and upload it to a remote destination.
 
 - [uv](https://docs.astral.sh/uv/)
 - [7-Zip](https://www.7-zip.org/) — `apt install p7zip-full` / `brew install 7zip` / `choco install 7zip`
-- [boto3](https://pypi.org/project/boto3/) — installed automatically via `uv`
+- [boto3](https://pypi.org/project/boto3/) — only for S3/MinIO backend; install via `uv tool install "[s3]"` (see below)
 
 ## Install
 
